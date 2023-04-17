@@ -31,16 +31,17 @@ jobs:
           name: Print Environment Variables
           command: |
             echo "RELEASE_VERSION: ${RELEASE_VERSION}"
-            echo "A_REPO_RELEASE_VERSION: ${A_REPO_RELEASE_VERSION}"
+            echo "B_REPO_RELEASE_VERSION: ${B_REPO_RELEASE_VERSION}"
             echo "TAG_NAME: ${TAG_NAME}"
+            source $BASH_ENV
       - run:
           name: Trigger release
           command: |
             gh api repos/${CIRCLE_PROJECT_USERNAME}/${TARGET_REPO}/releases \
               -X POST \
-              -F tag_name=${TAG_NAME} \
-              -F target_commitish=main \
-              -F name=${TAG_NAME} \
+              -f tag_name=${TAG_NAME} \
+              -f name=${TAG_NAME} \
+              -f target_commitish='main' \
               -F body="Release ${TAG_NAME} from ${CIRCLE_PROJECT_REPONAME}-${CIRCLE_TAG}" \
               -F draft=false \
               -F prerelease=false
