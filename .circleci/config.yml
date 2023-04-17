@@ -26,7 +26,7 @@ jobs:
       - run:
           name: Setup Environment Variables (Tag name)
           command: |
-            echo "export TAG_NAME=py3.7-torch1.12-cuda11.3-cudnn8-${A_REPO}${A_REPO_RELEASE_VERSION}-${CIRCLE_PROJECT_USERNAME}${RELEASE_VERSION}" >> "$BASH_ENV"
+            echo "export TAG_NAME=py3.7-torch1.12-cuda11.3-cudnn8-${A_REPO}${A_REPO_RELEASE_VERSION}-${CIRCLE_PROJECT_REPONAME}${RELEASE_VERSION}" >> "$BASH_ENV"
       - run:
           name: Print Environment Variables
           command: |
