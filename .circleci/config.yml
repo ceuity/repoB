@@ -1,0 +1,58 @@
+version: 2.1
+
+executors:
+  my-executor:
+    environment:
+      TARGET_REPO: circleci-test
+      A_REPO: repoA
+      py3.7-torch1.12-cuda11.3-cudnn8-voxa0.3.90-texa0.1.57
+
+orbs:
+  github-cli: circleci/github-cli@2.2.0
+
+jobs:
+  trigger_release:
+    executor: my-executor
+    machine: true
+    steps:
+      - github-cli/setup
+      - run:
+          name: Setup Environment Variables (Release Version)
+          command: |
+            echo "export RELEASE_VERSION=$(echo $CIRCLE_TAG | sed 's/^v//')" >> "$BASH_ENV"
+      - run:
+          name: Get repoA Release Version
+          command: |
+            echo "export A_REPO_RELEASE_VERSION=$(gh api repos/${CIRCLE_PROJECT_USERNAME}/${A_REPO}/releases/latest --jq '.tag_name' | sed 's/^v//')" >> "$BASH_ENV"
+      - run:
+          name: Setup Environment Variables (Tag name)
+          command: |
+            echo "export TAG_NAME=py3.7-torch1.12-cuda11.3-cudnn8-${A_REPO}${A_REPO_RELEASE_VERSION}-${CIRCLE_PROJECT_USERNAME}${RELEASE_VERSION}" >> "$BASH_ENV"
+      - run:
+          name: Print Environment Variables
+          command: |
+            echo "RELEASE_VERSION: ${RELEASE_VERSION}"
+            echo "A_REPO_RELEASE_VERSION: ${A_REPO_RELEASE_VERSION}"
+            echo "TAG_NAME: ${TAG_NAME}"
+      - run:
+          name: Trigger release
+          command: |
+            gh api repos/${CIRCLE_PROJECT_USERNAME}/${TARGET_REPO}/releases \
+              -X POST \
+              -F tag_name=${TAG_NAME} \
+              -F target_commitish=main \
+              -F name=${TAG_NAME} \
+              -F body="Release ${TAG_NAME} from ${CIRCLE_PROJECT_REPONAME}-${CIRCLE_TAG}" \
+              -F draft=false \
+              -F prerelease=false
+
+workflows:
+  release-flow:
+    jobs:
+      - trigger_release:
+          context: default
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
